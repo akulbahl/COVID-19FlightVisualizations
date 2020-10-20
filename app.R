@@ -1,5 +1,6 @@
 library(shinydashboard)
-
+library(dashboardthemes) # https://github.com/nik01010/dashboardthemes
+library(shinyWidgets)
 
 dates <- cbind(c("2019-01-01", "2019-06-30"), c("2020-01-01", "2020-06-30"))
 
@@ -35,11 +36,16 @@ ui <- dashboardPage(
     
 #-------------------------------#TAB CONTENTS#----------------------------------
     
-    dashboardBody(tabItems(
+    dashboardBody(
+      
+      
+      tabItems(
         
   # First tab content-----------------------------------
   
-        tabItem(tabName = "intro",
+        tabItem(
+          shinyDashboardThemes(theme = "purple_gradient"),
+          tabName = "intro",
                 h2("COVID-19 Flight Visualization Project")
                 ),
         
@@ -63,17 +69,19 @@ ui <- dashboardPage(
                     #    sliderInput("slider", "Number of observations:", 1, 100, 50)
                     #     )
                 
-                fluidRow(
-                
+                fluidRow( 
                   column(12, align = "center", box(  # FIGURE OUT HOW TO CENTER
                   width = 12, mainPanel(plotOutput("calendar"), width = 15), 
                   
                   box(title = "Calendar Category", width = 6, solidHeader = TRUE, 
                       status = "primary",
-                              radioButtons("calbuttons", label = h3(""),
-                            choices = list("Total Departure Delay (in Hours)" = 1, 
-                            "Total Cancelled Flights" = 2), 
-                            selected = 1)
+                      prettyRadioButtons("calbuttons", label = h3(""),
+                                         status = "info",
+                                         animation = "pulse",
+                                         inline = TRUE,
+                                        choices = list("Total Departure Delay (in Hours)" = 1, 
+                                                        "Total Cancelled Flights" = 2), 
+                                        selected = 1)
                   )
                   
                   )
@@ -88,7 +96,12 @@ ui <- dashboardPage(
                 
   # Third tab content----------------------------------
   
-        tabItem(
+        tabItem(switchInput("switch", label = "Start a Pandemic?", size = "large", 
+                            onLabel = "No", offLabel = "Yes", onStatus = "success", 
+                            offStatus = "danger", value = TRUE),
+          #radioGroupButtons(inputId = "pandemicbutton", label = "Start Pandemic?", 
+                            #choices = c("NO","YES"), justified = TRUE, size = "xs",
+                            #status = "success"),
             
             tabName = "widgets",
             h2("Pre-COVID-19 and COVID-19 Flight Statistics"),
@@ -98,13 +111,13 @@ ui <- dashboardPage(
                 selectizeInput(
                     inputId = "origin",
                     label = "Departure Airport",
-                    choices = unique(flights$ORIGIN_CITY_NAME)
+                    choices = sort(unique(flights$ORIGIN_CITY_NAME))
                 ),
                 
                 selectizeInput(
                     inputId = "dest",
                     label = "Arrival Airport",
-                    choices = unique(flights$DEST_CITY_NAME)
+                    choices = sort(unique(flights$DEST_CITY_NAME))
                 ),
                 
                 dateRangeInput(inputId ="dates",
@@ -119,14 +132,26 @@ ui <- dashboardPage(
                           ),
             
             box(title = "Number of Flights",
-                mainPanel(plotOutput("barchart")) #Plots delay bar chart
-                ),
+                mainPanel(plotOutput("barchart")), #Plots delay bar chart
+                "Airline Carrier Code:
+                AA: American Airlines
+                AS: Alaska Airlines
+                B6: JetBlue
+                DL: Delta Air Lines
+                F9: Frontier Airlines
+                G4: Allegiant Air
+                HA: Hawaiian Airlines
+                NK: Spirit Airlines
+                UA: United Airlines
+                WN: Southwest Airlines"),
             
             #Adds buttons for boxplot
             
-            radioButtons("boxbuttons", label = h3("Category"),
-                         choices = list("Pre-COVID" = 1, 
-                                        "COVID" = 2), 
+            prettyRadioButtons("boxbuttons", label = h3("Category"),
+                         status = "info",
+                         animation = "pulse", 
+                         choices = list("Pre-COVID (Jan - June 2019)" = 1, 
+                                        "COVID (Jan - June 2020)" = 2), 
                          selected = 1),
             hr(),
             fluidRow(column(3, verbatimTextOutput("value"))),
@@ -237,11 +262,11 @@ server <- function(input, output, session) {
         
     observe({
         #Edits destination based on origin input
-        dest <- unique(
+        dest <- sort(unique(
             flights %>% 
                 filter(flights$ORIGIN_CITY_NAME == input$origin) %>%
                 .$DEST_CITY_NAME 
-        )
+        ))
         
         updateSelectizeInput(session,
                              "dest",
