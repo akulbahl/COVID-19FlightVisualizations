@@ -15,43 +15,47 @@ ui <- dashboardPage(
     
     dashboardSidebar(sidebarMenu(
         
-        menuItem(
+        menuItem(                       ## First Menu Item in Sidebar
             "Introduction",
             tabName = "intro",
             icon = icon("dashboard")
         ),
         
-        menuItem(
+        menuItem(                       ## Second Menu Item in Sidebar
             "Summary Statistics",
-            tabName = "summary",
-            icon = icon("table")
+            tabName = "placeholder",
+            icon = icon("table"),
+            
+            menuSubItem("Overall Flight Statistics", tabName = "summary"),
+            menuSubItem("General Flight Information", tabName = "summary2")
         ),
         
-        menuItem(
-            "Impacted Flight Analysis", 
+        menuItem(                       ## Third Menu Item in Sidebar
+            "COVID-19 Flight Analysis", 
             tabName = "widgets", 
-            icon = icon("th"))
+            icon = icon("th"),
         
-    )),
+            menuSubItem("COVID-19 Visualizations", tabName = "covid"),
+            menuSubItem("More COVID-19 Visualizations", tabName = "covid2")
+        
+    ))),
     
 #-------------------------------#TAB CONTENTS#----------------------------------
     
-    dashboardBody(
-      
+    dashboardBody(shinyDashboardThemes(theme = "purple_gradient"),
       
       tabItems(
         
   # First tab content-----------------------------------
   
         tabItem(
-          shinyDashboardThemes(theme = "purple_gradient"),
-          tabName = "intro",
+                tabName = "intro",
                 h2("COVID-19 Flight Visualization Project")
                 ),
         
   # Second tab content----------------------------------
   
-        tabItem(tabName = "summary",
+        tabItem(tabName = "summary", # Corresponds to summary menu sub item
                 
                 fluidRow(
                   
@@ -96,14 +100,12 @@ ui <- dashboardPage(
                 
   # Third tab content----------------------------------
   
-        tabItem(switchInput("switch", label = "Start a Pandemic?", size = "large", 
-                            onLabel = "No", offLabel = "Yes", onStatus = "success", 
-                            offStatus = "danger", value = TRUE),
-          #radioGroupButtons(inputId = "pandemicbutton", label = "Start Pandemic?", 
+        tabItem(tabName = "summary2",
+            
+                    #radioGroupButtons(inputId = "pandemicbutton", label = "Start Pandemic?", 
                             #choices = c("NO","YES"), justified = TRUE, size = "xs",
                             #status = "success"),
             
-            tabName = "widgets",
             h2("Pre-COVID-19 and COVID-19 Flight Statistics"),
             
             sidebarPanel(
@@ -145,21 +147,30 @@ ui <- dashboardPage(
                 UA: United Airlines
                 WN: Southwest Airlines"),
             
-            #Adds buttons for boxplot
+            box(
+              plotOutput("corrmat")
+            )
             
-            prettyRadioButtons("boxbuttons", label = h3("Category"),
-                         status = "info",
-                         animation = "pulse", 
-                         choices = list("Pre-COVID (Jan - June 2019)" = 1, 
-                                        "COVID (Jan - June 2020)" = 2), 
-                         selected = 1),
-            hr(),
-            fluidRow(column(3, verbatimTextOutput("value"))),
-            
-            #Plots boxplot
-            mainPanel(plotOutput("boxplot"))
-            
-        )
+        ),
+  
+          tabItem(tabName = "covid", 
+                  
+                  switchInput("switch", label = "Start a Pandemic?", size = "large", 
+                      onLabel = "No", offLabel = "Yes", onStatus = "success", 
+                      offStatus = "danger", value = TRUE),
+                  
+                  #Adds buttons for boxplot
+                  
+                  prettyRadioButtons("boxbuttons", label = h3("Category"),
+                                     status = "info",
+                                     animation = "pulse", 
+                                     choices = list("Pre-COVID (Jan - June 2019)" = 1, 
+                                                    "COVID (Jan - June 2020)" = 2), 
+                                     selected = 1),
+                  hr(),
+                  fluidRow(column(3, verbatimTextOutput("value"))),
+                  
+                  mainPanel(plotOutput("boxplot"))) #Plots boxplot
         
         
                 ))
@@ -246,13 +257,11 @@ server <- function(input, output, session) {
     
     ## CORRELATION HEATMAP
     
-    output$corrmat <- renderPlot(
-      
-      corr_mat
+    #output$corrmat <- renderPlot(
                       
-      #heatmaply_cor(cor(corr_data))
+    #  heatmaply_cor(cor(corr_data))
       
-      )
+    #  )
     
 ##--------------------------- iNTERACTIVE PLOTS ## -----------------------------
     
