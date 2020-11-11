@@ -1,9 +1,65 @@
 library(shinydashboard)
-library(dashboardthemes) # https://github.com/nik01010/dashboardthemes
+library(dashboardthemes)
 library(shinyWidgets)
+library(rsconnect)
+library(reshape2)
+library(dplyr)
+library(ggplot2)
+library(tidyverse)
+library(knitr)
+library(gganimate)
+library(lubridate)
+library(heatmaply)
+library(ggthemes)
+library(esquisse)
+library(plotly)
 
-dates <- cbind(c("2019-01-01", "2019-06-30"), c("2020-01-01", "2020-06-30"))
+setwd("C:\\Users\\Akul\\Desktop\\DSA\\R Visualization Project Data")
 
+# arrange flights by date
+flights <- read.csv('jan2019jun2020.csv')
+flights$FL_DATE <- ymd(mdy(flights$FL_DATE))
+flights <- flights %>% arrange(., FL_DATE)
+
+source("https://raw.githubusercontent.com/iascchen/VisHealth/master/R/calendarHeat.R")
+
+#Summing delay times for easier calculation
+sum_delays <- flights %>% 
+  group_by(FL_DATE, MKT_UNIQUE_CARRIER) %>% 
+  summarise(count = 1/60 * sum(DEP_DELAY_NEW, na.rm = T)) %>% 
+  as.data.frame()
+
+corr_df <- flights %>%
+  filter(., CANCELLED == 0 & !is.na(ACTUAL_ELAPSED_TIME) & !is.na(CRS_ELAPSED_TIME)) %>%
+  select(
+    c(
+      "DAY_OF_MONTH",
+      "DAY_OF_WEEK",
+      "CRS_DEP_TIME",
+      "DEP_TIME",
+      "DEP_DELAY_NEW",
+      "TAXI_OUT",
+      "WHEELS_OFF",
+      "WHEELS_ON",
+      "TAXI_IN",
+      "CRS_ARR_TIME",
+      "ARR_TIME",
+      "ARR_DELAY_NEW",
+      "CRS_ELAPSED_TIME",
+      "ACTUAL_ELAPSED_TIME",
+      "AIR_TIME",
+      "DISTANCE"
+    )
+  )
+
+corr_data <- melt(round(cor(corr_df), 3))
+
+corr_mat <- ggplot(corr_data, aes(x = Var1, y = Var2, fill = value)) + 
+  geom_tile() + 
+  labs(x = "", y = "") + scale_fill_viridis() + theme_minimal() +
+  theme(axis.text.x = element_text(hjust = 1, vjust = 1, angle = 60))
+
+#-------------------------------#FRONT END#-------------------------------------
 
 ui <- dashboardPage(
     
@@ -23,11 +79,11 @@ ui <- dashboardPage(
         
         menuItem(                       ## Second Menu Item in Sidebar
             "Summary Statistics",
-            tabName = "placeholder",
+            tabName = "summaries",
             icon = icon("table"),
             
             menuSubItem("Overall Flight Statistics", tabName = "summary"),
-            menuSubItem("General Flight Information", tabName = "summary2")
+            menuSubItem("More Summary Statistics", tabName = "summary2")
         ),
         
         menuItem(                       ## Third Menu Item in Sidebar
@@ -35,8 +91,7 @@ ui <- dashboardPage(
             tabName = "widgets", 
             icon = icon("th"),
         
-            menuSubItem("COVID-19 Visualizations", tabName = "covid"),
-            menuSubItem("More COVID-19 Visualizations", tabName = "covid2")
+            menuSubItem("COVID-19 Visualizations", tabName = "covid")
         
     ))),
     
@@ -44,18 +99,48 @@ ui <- dashboardPage(
     
     dashboardBody(shinyDashboardThemes(theme = "purple_gradient"),
       
-      tabItems(
+      tabItems( 
         
   # First tab content-----------------------------------
   
         tabItem(
                 tabName = "intro",
-                h2("COVID-19 Flight Visualization Project")
+                h2("COVID-19 Flight Visualization Project"),
+                fluidRow(
+                print(img(src = "https://www.globaltimes.cn/Portals/0/attachment/2020/2020-10-20/84220eb8-3383-4611-8f76-4d8fcf0df7a0.jpeg",
+                      width = "50%")),
+                print(img(src = "https://www.transportation.gov/themes/custom/dot_cms/images/seal_dot.png",
+                      width = "45%"))
                 ),
+                fluidRow(
+                box(
+                "COVID-19 has severely crippled the global airline industry with 
+                air service reductions widespread throughout 2020. This dataset 
+                containing 11 million flights will aid those seeking to visualize 
+                the impact that the virus has had on the domestic United States 
+                airline industry through detailed flight delay and cancellation data."
+                ),
+                box("
+                The United States Department of Transportation's (DOT) Bureau of 
+                Transportation Statistics tracks the on-time performance of domestic 
+                flights operated by large air carriers. The data collected is from 
+                January - June 2020 (will be updated soon) and contains relevant 
+                flight information (on-time, delayed, canceled, diverted flights) 
+                from the Top 10 United States flight carriers for 11 million flights.
+
+                The compiled and cleaned data is hosted on github (github.com/akulbahl)
+                in 47 columns with full column descriptions in the attached .txt file.")
+                )
+                    )
+                ,
         
   # Second tab content----------------------------------
   
+      # Tab 2 Subtab 1--------------------------------------
+  
         tabItem(tabName = "summary", # Corresponds to summary menu sub item
+                
+                h2("Summary Statistics"),
                 
                 fluidRow(
                   
@@ -63,18 +148,13 @@ ui <- dashboardPage(
                     width = 6, status = "primary", mainPanel(plotOutput("heatdelay"), width = 15)
                     ),
                   
-                  box(title = "Elapsed Flight Time by Domestic US Airline (Jan 2019 - Jun 2020)",
+                  box(title = "Elapsed Flight Time Density by Domestic US Airline (Jan 2019 - Jun 2020)",
                     width = 6, status = "warning", mainPanel(plotOutput("timedensity"), width = 15)
                   )
                 ),
-                    
-                    #box(
-                    #    title = "Controls",
-                    #    sliderInput("slider", "Number of observations:", 1, 100, 50)
-                    #     )
                 
                 fluidRow( 
-                  column(12, align = "center", box(  # FIGURE OUT HOW TO CENTER
+                  column(12, align = "center", box(
                   width = 12, mainPanel(plotOutput("calendar"), width = 15), 
                   
                   box(title = "Calendar Category", width = 6, solidHeader = TRUE, 
@@ -83,9 +163,9 @@ ui <- dashboardPage(
                                          status = "info",
                                          animation = "pulse",
                                          inline = TRUE,
-                                        choices = list("Total Departure Delay (in Hours)" = 1, 
+                                         choices = list("Total Departure Delay (in Hours)" = 1, 
                                                         "Total Cancelled Flights" = 2), 
-                                        selected = 1)
+                                         selected = 1)
                   )
                   
                   )
@@ -98,27 +178,24 @@ ui <- dashboardPage(
                 )
         ),
                 
-  # Third tab content----------------------------------
-  
+      # Tab 2 Subtab 2--------------------------------------
+
         tabItem(tabName = "summary2",
             
-                    #radioGroupButtons(inputId = "pandemicbutton", label = "Start Pandemic?", 
-                            #choices = c("NO","YES"), justified = TRUE, size = "xs",
-                            #status = "success"),
+            h2("Additional Summary Statistics"),
             
-            h2("Pre-COVID-19 and COVID-19 Flight Statistics"),
-            
+            fluidRow(
             sidebarPanel(
                 
                 selectizeInput(
                     inputId = "origin",
-                    label = "Departure Airport",
+                    label = h3("Departure Airport"),
                     choices = sort(unique(flights$ORIGIN_CITY_NAME))
                 ),
                 
                 selectizeInput(
                     inputId = "dest",
-                    label = "Arrival Airport",
+                    label = h3("Arrival Airport"),
                     choices = sort(unique(flights$DEST_CITY_NAME))
                 ),
                 
@@ -133,8 +210,8 @@ ui <- dashboardPage(
                 
                           ),
             
-            box(title = "Number of Flights",
-                mainPanel(plotOutput("barchart")), #Plots delay bar chart
+            box(title = "Number of Flights", width = 6, status = "primary",
+                mainPanel(plotOutput("barchart"), width = 15), #Plots delay bar chart
                 "Airline Carrier Code:
                 AA: American Airlines
                 AS: Alaska Airlines
@@ -146,37 +223,74 @@ ui <- dashboardPage(
                 NK: Spirit Airlines
                 UA: United Airlines
                 WN: Southwest Airlines"),
+            ),
             
-            box(
-              plotOutput("corrmat")
+            fluidRow(
+            box(title = "Feature Correlation Heatmap", width = 9, status = "warning",
+              mainPanel(plotOutput("corrmat"), width = 9)
+                )
             )
-            
         ),
-  
-          tabItem(tabName = "covid", 
-                  
-                  switchInput("switch", label = "Start a Pandemic?", size = "large", 
-                      onLabel = "No", offLabel = "Yes", onStatus = "success", 
-                      offStatus = "danger", value = TRUE),
-                  
-                  #Adds buttons for boxplot
-                  
-                  prettyRadioButtons("boxbuttons", label = h3("Category"),
-                                     status = "info",
-                                     animation = "pulse", 
-                                     choices = list("Pre-COVID (Jan - June 2019)" = 1, 
-                                                    "COVID (Jan - June 2020)" = 2), 
-                                     selected = 1),
-                  hr(),
-                  fluidRow(column(3, verbatimTextOutput("value"))),
-                  
-                  mainPanel(plotOutput("boxplot"))) #Plots boxplot
+
+# Third tab content---------------------------------- 
+
+        tabItem(tabName = "covid", 
+                
+                h2("COVID-19 Comparison Plots - Select Pandemic Button to Change Situation"),
+                
+                switchInput("switch", label = "Start a Pandemic?", size = "large", 
+                    onLabel = "No", offLabel = "Yes", onStatus = "success", 
+                    offStatus = "danger", value = TRUE),
+                
+                hr(),
+                fluidRow(
+                         box(title = "Departure Times by Airline",
+                             width = 9, 
+                             status = "primary",
+                             mainPanel(plotOutput("boxplot"),
+                                       width = 9),
+                             "Airline Carrier Code:
+                              AA: American Airlines
+                              AS: Alaska Airlines
+                              B6: JetBlue
+                              DL: Delta Air Lines
+                              F9: Frontier Airlines
+                              G4: Allegiant Air
+                              HA: Hawaiian Airlines
+                              NK: Spirit Airlines
+                              UA: United Airlines
+                              WN: Southwest Airlines"
+                             )
+                        ),
+                
+                 #Plots boxplot
         
-        
-                ))
+                fluidRow(
+                  box(title = "Time Density by Domestic US Airline", 
+                             width = 10, 
+                             status = "warning", 
+                         mainPanel(plotOutput("delaydensity"), 
+                        width = 10),
+                      "Airline Carrier Code:
+                              AA: American Airlines
+                              AS: Alaska Airlines
+                              B6: JetBlue
+                              DL: Delta Air Lines
+                              F9: Frontier Airlines
+                              G4: Allegiant Air
+                              HA: Hawaiian Airlines
+                              NK: Spirit Airlines
+                              UA: United Airlines
+                              WN: Southwest Airlines"
+                      
+                      )
+                        )
+                )
+      
+              ))
 )
 
-#-------------------------------------------------------------------------------
+#-------------------------------#BACK END#--------------------------------------
 #-------------------------------------------------------------------------------
 #-------------------------------------------------------------------------------
 #-------------------------------------------------------------------------------
@@ -257,13 +371,9 @@ server <- function(input, output, session) {
     
     ## CORRELATION HEATMAP
     
-    #output$corrmat <- renderPlot(
-                      
-    #  heatmaply_cor(cor(corr_data))
-      
-    #  )
+    output$corrmat <- renderPlot(corr_mat)
     
-##--------------------------- iNTERACTIVE PLOTS ## -----------------------------
+##---------------------------INTERACTIVE COVID PLOTS ## ------------------------
     
     #Selects Pre/Post-COVID Dates
     
@@ -314,27 +424,109 @@ server <- function(input, output, session) {
               axis.text = element_text(size = 12))
       
     )
-   
-    ## Creates Boxplot Output
     
-    output$boxplot <- renderPlot(
-        
-    flights %>%
-        filter(FL_DATE >= dates[, as.integer(input$boxbuttons)][1] & 
-                   FL_DATE <= dates[, as.integer(input$boxbuttons)][2]) %>%
-        filter(!(CANCELLATION_CODE %in% 
-                     "")) %>%
-        ggplot() +
-        aes(x = "", y = DEP_TIME, fill = MKT_UNIQUE_CARRIER) +
-        geom_boxplot() +
-        scale_fill_hue() +
-        labs(x = 'Airline', y = "Departure Time (Military)", title = "Departure Times by Airline", 
-             subtitle =  c("Jan 2019 - June 2019", "Jan 2020 - June 2020")[as.integer(input$boxbuttons)]
-             , fill = "Airline") +
-        theme_minimal()
-    )
-    
+    noncovidboxplot <- flights %>%
+                      filter(FL_DATE >= "2019-01-01" & 
+                                 FL_DATE <= "2019-06-30") %>%
+                      filter(!(CANCELLATION_CODE %in% 
+                                   "")) %>%
+                      ggplot() +
+                      aes(x = "", y = DEP_TIME, fill = MKT_UNIQUE_CARRIER) +
+                      geom_boxplot() +
+                      scale_fill_hue() +
+                      labs(x = 'Airline', y = "Departure Time (Military)", 
+                           title = "PRE-COVID (Jan 2019 - June 2019)", 
+                           fill = "Airline") +
+                      theme_minimal()
 
+    covidboxplot <- flights %>%
+                      filter(FL_DATE >= "2020-01-01" & 
+                               FL_DATE <= "2020-06-30") %>%
+                      filter(!(CANCELLATION_CODE %in% 
+                                 "")) %>%
+                      ggplot() +
+                      aes(x = "", y = DEP_TIME, fill = MKT_UNIQUE_CARRIER) +
+                      geom_boxplot() +
+                      scale_fill_hue() +
+                      labs(x = 'Airline', y = "Departure Time (Military)", 
+                           title = "COVID (Jan 2020 - June 2020)", 
+                           fill = "Airline") +
+                      theme_minimal()
+
+    ## Creates Reactive Boxplot Output
+    
+    boxplots <- reactive({
+      
+      if (input$switch == TRUE) {
+        noncovidboxplot
+      } else if (input$switch == FALSE) {
+        covidboxplot
+      }
+      
+    })
+    
+    output$boxplot <- renderPlot({
+      boxplots()
+    })
+ 
+    
+    ## Delay density plots
+    
+    noncovid_delaydensity <- flights %>%
+      filter(FL_DATE >= "2019-01-01" & FL_DATE <= "2019-06-30") %>%
+      filter(!(CANCELLATION_CODE %in% 
+                 "")) %>%
+      ggplot() + aes(x = DEP_DELAY_NEW, fill = MKT_UNIQUE_CARRIER) +
+      geom_density(alpha = 0.8,
+                   adjust = 1L) +
+      facet_grid(MKT_UNIQUE_CARRIER ~ ., scales = "free") +
+      labs(x = 'Flight Delay [log(Minutes)]', y = 'Density', 
+           title = "PRE-COVID (Jan 2019 - June 2019)") +
+      labs(fill = 'Airline') +
+      scale_fill_hue() +
+      scale_x_continuous(trans = "log") +
+      theme_minimal() +
+      theme(
+        axis.title = element_text(size = 12),
+        axis.text = element_text(size = 10),
+        legend.position = 'left'
+      )
+    
+    covid_delaydensity <- flights %>%
+      filter(FL_DATE >= "2020-01-01" & FL_DATE <= "2020-06-30") %>%
+      filter(!(CANCELLATION_CODE %in% 
+                 "")) %>%
+      ggplot() + aes(x = DEP_DELAY_NEW, fill = MKT_UNIQUE_CARRIER) +
+      geom_density(alpha = 0.8,
+                   adjust = 1L) +
+      facet_grid(MKT_UNIQUE_CARRIER ~ ., scales = "free") +
+      labs(x = '[log(Minutes)]', y = 'Density', 
+           title = "COVID (Jan 2020 - June 2020)") +
+      labs(fill = 'Airline') +
+      scale_fill_hue() +
+      scale_x_continuous(trans = "log") +
+      theme_minimal() +
+      theme(
+        axis.title = element_text(size = 12),
+        axis.text = element_text(size = 10),
+        legend.position = 'left'
+      )
+    
+    ## Reactive density plots
+    
+    delaydensities <- reactive({
+      
+      if (input$switch == TRUE) {
+        noncovid_delaydensity
+      } else if (input$switch == FALSE) {
+        covid_delaydensity
+      }
+      
+    })
+    
+    output$delaydensity <- renderPlot({
+      delaydensities()
+    })
 }
 
 shinyApp(ui, server)
