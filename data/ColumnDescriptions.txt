@@ -1,0 +1,62 @@
+Note:	- All time is LOCAL time for departures and arrivals. 
+	- If Single or 2-Digit Values are present for a Time Value, they represent 00:MM (e.g. 3 represents 00:03 or 12:03 AM).
+
+YEAR 			- Year
+QUARTER 		- 1: Jan-Mar, 2: Apr-Jun, 3: Jul-Sep, 4: Oct-Dec
+MONTH 			- Month of Year
+DAY_OF_MONTH 		- Date of Month
+DAY_OF_WEEK 		- Day of Week (1: Monday, 7: Sunday)
+FL_DATE 		- Full flight date (M/DD/YYYY)
+MKT_UNIQUE_CARRIER	- Airline Carrier Code:
+				AA: American Airlines
+				AS: Alaska Airlines
+				B6: JetBlue
+				DL: Delta Air Lines
+				F9: Frontier Airlines
+				G4: Allegiant Air
+				HA: Hawaiian Airlines
+				NK: Spirit Airlines
+				UA: United Airlines
+				WN: Southwest Airlines
+MKT_CARRIER_FL_NUM	- Flight Number
+TAIL_NUM		- Aircraft Tail Number (Usually starts with 'N')
+ORIGIN			- Flight Departure 3-Letter Airport Abbreviation
+ORIGIN_CITY_NAME	- Flight Departure City, State Names
+ORIGIN_STATE_ABR	- Flight Departure 2-Letter State Abbreviation
+ORIGIN_STATE_NM		- Flight Departure State Name
+DEST			- Flight Arrival 3-Letter Airport Abbreviation
+DEST_CITY_NAME		- Flight Arrival City, State Names
+DEST_STATE_ABR		- Flight Arrival 2-Letter State Abbreviation
+DEST_STATE_NM		- Flight Arrival State Name
+CRS_DEP_TIME		- Scheduled Departure Time (HHMM) (Single or 2-Digit Values Represent 00:MM, e.g. 3 represents 00:03 or 12:03 AM)
+DEP_TIME		- Actual Departure Time (HHMM)
+DEP_DELAY		- Departure Delay (Difference Between Actual Departure Time and Scheduled Departure Time in Minutes)
+DEP_DELAY_NEW		- Departure Delay Ignoring Early Departures (Listed as 0)
+DEP_DEL15		- Departure Delay Greater Than 15 Minutes (0: Not Greater Than 15, 1: Greater Than 15)
+DEP_DELAY_GROUP		- Departure Delay in Number of 15-minute increments Rounded Down (e.g. Early Departure (< 0) is a value of -1, 30 or 42 minutes is a value of 2)
+DEP_TIME_BLK		- Scheduled Departure Time in Hourly Block (HHMM)
+TAXI_OUT		- Time between Airplane Taxi from Gate and Takeoff (WHEELS_OFF) Time (in Minutes)
+WHEELS_OFF		- Time of Airplane Takeoff (HHMM)
+WHEELS_ON		- Time of Airplane Landing (HHMM)
+TAXI_IN			- Time between Airplane Taxi to Gate and Landing (WHEELS_ON) Time (in Minutes)
+CRS_ARR_TIME		- Scheduled Arrival Time (HHMM) (Single or 2-Digit Values Represent 00:MM, e.g. 3 represents 00:03 or 12:03 AM)
+ARR_TIME		- Actual Arrival Time (HHMM)
+ARR_DELAY		- Arrival Delay (Difference Between Actual Arrival Time and Scheduled Arrival Time in Minutes)
+ARR_DELAY_NEW		- Arrival Delay Ignoring Early Arrivals (Listed as 0)
+ARR_DEL15		- Arrival Delay Greater Than 15 Minutes (0: Not Greater Than 15, 1: Greater Than 15)
+ARR_DELAY_GROUP		- Arrival Delay in Number of 15-minute increments Rounded Down (e.g. Early Arrival (< 0) is a value of -1, 30 or 42 minutes is a value of 2)
+ARR_TIME_BLK		- Scheduled Arrival Time in Hourly Block (HHMM)
+CANCELLED		- 0: Flight Not Cancelled, 1: Flight Cancelled
+CANCELLATION_CODE	- Reason for Cancellation - if Cancelled, Letter Present (A: Carrier, B: Weather, C: National Aviation System, D: Security)
+CRS_ELAPSED_TIME	- Scheduled Total Flight Time (in Minutes)
+ACTUAL_ELAPSED_TIME	- Actual Total Elapsed Flight Time (in Minutes)
+AIR_TIME		- Actual Total Elapsed Time Airplane in the Air (in Minutes)
+DISTANCE		- Distance Between Departure and Arrival Airports (in Miles)
+DISTANCE_GROUP		- Distance Between Departure and Arrival Airports in Number of 250-Mile increments Rounded Down (e.g. 400 miles is a value of 1)
+CARRIER_DELAY		- Carrier Delay (in Minutes)
+WEATHER_DELAY		- Weather Delay (in Minutes)
+NAS_DELAY		- National Aviation System Delay (in Minutes)
+SECURITY_DELAY		- Security Delay (in Minutes)
+LATE_AIRCRAFT_DELAY	- Late Aircraft Delay (in Minutes)
+
+
