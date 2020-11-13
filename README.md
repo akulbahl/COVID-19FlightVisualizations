@@ -14,7 +14,7 @@ The flights are segmented by month. The cleaned and segmented data is located in
 
 ## Usage
 
-View the R Shiny application here. To run locally, download the Kaggle data has been downloaded and merged to one file. Change your working directory:
+View the R Shiny application here. To run locally, download the Kaggle data and ensure that it has been properly downloaded and in a single ".csv" file. Change your working directory:
 
 ```Python
 setwd("path\to\file")
