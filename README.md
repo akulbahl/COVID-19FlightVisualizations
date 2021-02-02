@@ -6,7 +6,7 @@ COVID-19 has severely crippled the global airline industry with air service redu
 
 ## Data
 
-The *United States Department of Transportation's (DOT) Bureau of Transportation Statistics* tracks the on-time performance of domestic flights operated by large air carriers. The data collected is from **January 2019 - June 2020** and contains relevant flight information (on-time, delayed, canceled, diverted flights) from the Top 10 United States flight carriers for **~11 million flights**. 
+The *United States Department of Transportation's (DOT) Bureau of Transportation Statistics* tracks the on-time performance of domestic flights operated by large air carriers. The data collected is from **January - June 2020** and contains relevant flight information (on-time, delayed, canceled, diverted flights) from the Top 10 United States flight carriers for **~11 million flights**. 
 
 The data files are hosted and freely available on [Kaggle](https://www.kaggle.com/akulbahl/covid19-airline-flight-delays-and-cancellations). 
 
